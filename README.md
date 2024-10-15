@@ -66,7 +66,7 @@ O `generator.py` realiza as seguintes tarefas:
 
 ## Considerações Finais
 
-O `generator.py` é uma ferramenta poderosa para desenvolvedores que desejam manter a documentação de seus projetos Python sempre atualizada de forma rápida e eficiente. Ao automatizar a geração do `README.md`, ele contribui para a manutenção de projetos bem documentados, facilitando a compreensão e colaboração.
+O `generator.py` é uma ferramenta útil para desenvolvedores que desejam manter a documentação de seus projetos Python sempre atualizada de forma rápida e eficiente. Ao automatizar a geração do `README.md`, ele contribui para a manutenção de projetos bem documentados, facilitando a compreensão e colaboração.
 
 ---
 
