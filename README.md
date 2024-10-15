@@ -5,8 +5,10 @@ Este projeto inclui um script Python chamado `generator.py` que automatiza a cri
 # OBS: Para que o script funcione seus arquivos .py devem estar documentados utilizando docstrings. Recomendamos a utilização da extensão do VSCODE [autoDocstring](https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring).
 
 Exemplo:
+```
     """
-    Sumário, breve explicação de funcionamento.
+    Sumary: 
+        breve explicação de funcionamento.
 
     Args:
         arqumento_passado_na_execução (str): descrição do argumento.
@@ -14,7 +16,7 @@ Exemplo:
     Returns:
         tipo_de_dado: Descrição do retorno.
     """
-
+```
 
 ## Funcionalidade
 
