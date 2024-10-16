@@ -2,18 +2,18 @@ import ast
 import os
 import re
 
-# Caminho do diretório contendo seus arquivos Python
-DIRECTORY = '.'  # Substitua pelo caminho do seu diretório se não for o atual
+DIRECTORY = '.'
 
-# Modelo do README.md com placeholders para inserção dinâmica de conteúdo
 README_TEMPLATE = """
-![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=EM%20DESENVOLVIMENTO&color=GREEN&style=for-the-badge)
+{status_badge}
+{language_badges}
+
+# Índice
 
 * [Introdução](#introdução)
 * [Instalação de Dependências](#instalação-de-dependências)
 * [Estrutura do Código](#estrutura-do-código)
-* [Funções e Classes](#funções-e-classes)
-{toc_routes}
+* [Funções e Classes](#funções-e-classes){toc_routes}
 * [Execução da Aplicação](#execução-da-aplicação)
 
 # Introdução
@@ -24,8 +24,9 @@ README_TEMPLATE = """
 
 Para instalar as dependências, utilize o seguinte comando:
 
-> pip install -r requirements.txt
-
+```bash
+pip install -r requirements.txt
+```
 # Estrutura do Código
 
 O código está organizado da seguinte forma:
@@ -45,17 +46,18 @@ O código está organizado da seguinte forma:
 {execution_section}
 """
 
+
 def extract_functions_classes_routes(file_path):
     """
     Extrai funções, classes, rotas do Flask, e verifica se o arquivo contém 'app.run()'.
 
     Args:
-        file_path (str): Caminho para o arquivo Python a ser analisado.
+    file_path (str): Caminho para o arquivo Python a ser analisado.
 
-    Returns:
-        tuple: Contém listas de funções, classes, rotas, um booleano indicando se 'app.run()' está presente,
-               e um booleano indicando se Flask está sendo utilizado.
-    """
+Returns:
+    tuple: Contém listas de funções, classes, rotas, um booleano indicando se 'app.run()' está presente,
+           e um booleano indicando se Flask está sendo utilizado.
+"""
     with open(file_path, 'r', encoding='utf-8') as file:
         node = ast.parse(file.read(), filename=file_path)
 
@@ -69,10 +71,10 @@ def extract_functions_classes_routes(file_path):
     for n in node.body:
         if isinstance(n, ast.Import):
             for alias in n.names:
-                if alias.name == 'flask':
+                if alias.name == 'flask' or 'Flask':
                     is_flask_app = True
         elif isinstance(n, ast.ImportFrom):
-            if n.module == 'flask':
+            if n.module == 'flask' or 'Flask':
                 is_flask_app = True
 
     # Itera sobre os elementos do nó AST para extrair informações
@@ -118,51 +120,62 @@ def extract_functions_classes_routes(file_path):
 
     return functions, classes, routes, has_app_run, is_flask_app
 
+
 def generate_code_structure(directory, exclude_files):
     """
     Gera a estrutura de diretórios e arquivos Python, excluindo arquivos especificados.
 
     Args:
-        directory (str): Diretório raiz para a geração da estrutura.
-        exclude_files (list): Lista de nomes de arquivos a serem excluídos.
+    directory (str): Diretório raiz para a geração da estrutura.
+    exclude_files (list): Lista de nomes de arquivos a serem excluídos.
 
     Returns:
         str: Representação em Markdown da estrutura de código.
     """
-    structure = ''
+    structure_lines = []
+
     for root, dirs, files in os.walk(directory):
+        rel_dir = os.path.relpath(root, directory)
+        if any(part.startswith('.') for part in rel_dir.split(os.sep)):
+            continue
+        level = rel_dir.count(os.sep)
+        indent = ' ' * 4 * level
+        if rel_dir != '.':
+            structure_lines.append(f"{indent}- **{os.path.basename(root)}/**")
+        sub_indent = ' ' * 4 * (level + 1)
         for name in files:
-            if name.endswith('.py') and name not in exclude_files:
-                rel_dir = os.path.relpath(root, directory)
-                rel_file = os.path.join(rel_dir, name) if rel_dir != '.' else name
-                structure += f"- `{rel_file}`\n"
-    return structure
+            if name.endswith('.py') and name not in exclude_files and not name.startswith('.'):
+                structure_lines.append(f"{sub_indent}- `{name}`")
+
+    return '\n'.join(structure_lines)
+
 
 def generate_functions_doc(functions):
     """
     Gera a documentação em Markdown para as funções extraídas.
 
     Args:
-        functions (list): Lista de dicionários contendo informações sobre as funções.
+    functions (list): Lista de dicionários contendo informações sobre as funções.
 
     Returns:
         str: Documentação em Markdown das funções.
     """
     doc = ''
     for func in functions:
-        doc += f"### {func['name']}\n\n"
+        doc += f"### `{func['name']}`\n\n"
         if func['docstring']:
             doc += f"{func['docstring']}\n\n"
         else:
             doc += "Sem descrição disponível.\n\n"
     return doc
 
+
 def generate_classes_doc(classes):
     """
     Gera a documentação em Markdown para as classes e seus métodos.
 
     Args:
-        classes (list): Lista de dicionários contendo informações sobre as classes e métodos.
+    classes (list): Lista de dicionários contendo informações sobre as classes e métodos.
 
     Returns:
         str: Documentação em Markdown das classes e métodos.
@@ -184,12 +197,13 @@ def generate_classes_doc(classes):
                     doc += "  Sem descrição disponível.\n\n"
     return doc
 
+
 def generate_routes_doc(routes):
     """
     Gera a documentação em Markdown para as rotas do Flask.
 
     Args:
-        routes (list): Lista de dicionários contendo informações sobre as rotas.
+    routes (list): Lista de dicionários contendo informações sobre as rotas.
 
     Returns:
         str: Documentação em Markdown das rotas.
@@ -200,13 +214,14 @@ def generate_routes_doc(routes):
         doc += f"- `{route['route']}`{methods}\n"
     return doc
 
+
 def find_app_entry(directory, exclude_files):
     """
     Encontra o arquivo de entrada principal da aplicação Flask, se existir.
 
     Args:
-        directory (str): Diretório raiz para a busca.
-        exclude_files (list): Lista de nomes de arquivos a serem excluídos.
+    directory (str): Diretório raiz para a busca.
+    exclude_files (list): Lista de nomes de arquivos a serem excluídos.
 
     Returns:
         tuple: Nome do arquivo de entrada e número da porta, se encontrado.
@@ -229,11 +244,55 @@ def find_app_entry(directory, exclude_files):
                     return app_file, app_port
     return app_file, app_port
 
+def detect_languages(directory, exclude_files):
+    """_summary_
+
+    Args:
+    directory (str): Diretório raiz para a varredura.
+    exclude_files (list): Lista de nomes de arquivos a serem excluídos.
+
+    Returns:
+    list: Lista de linguagens de programação detectadas.
+    """
+    extensions_to_languages = {
+        '.py': 'Python',
+        '.js': 'JavaScript',
+        '.html': 'HTML',
+        '.css': 'CSS',
+        '.java': 'Java',
+    }
+
+    languages = set()
+
+    for root, dirs, files in os.walk(directory):
+        for name in files:
+            if name not in exclude_files:
+                _, ext = os.path.splitext(name)
+                language = extensions_to_languages.get(ext.lower())
+                if language:
+                    languages.add(language)
+
+    return list(languages)
+
+def generate_language_badges(languages):
+    badges = ''
+    for lang in languages:
+        lang_encoded = lang.replace(' ', '%20')
+        badge = f"![{lang}](https://img.shields.io/badge/Code-{lang_encoded}-blue.svg)"
+        badges += badge + ' '
+    return badges.strip()
+
 def main():
     """
     Função principal que orquestra a geração do README.md.
     """
     print("Bem-vindo ao Gerador de README.md!")
+    # Pergunta o status do projeto
+    print("\nSelecione o status do projeto:")
+    print("1 - Em desenvolvimento")
+    print("2 - Concluído")
+    print("3 - Descontinuado")
+    status_choice = input("Escolha uma opção (1, 2, 3): ").strip()
     objetivo = input("Insira o objetivo do projeto: ").strip()
     funcionalidade = input("Insira uma descrição breve da funcionalidade: ").strip()
 
@@ -241,18 +300,44 @@ def main():
     introduction = f"""Este projeto tem como objetivo **{objetivo}**.
 Ele foi desenvolvido para **{funcionalidade}**."""
 
+    status_dict = {
+        '1': 'Em Desenvolvimento',
+        '2': 'Concluído',
+        '3': 'Descontinuado'
+    }
+
+    status = status_dict.get(status_choice, 'Em Desenvolvimento')
+
+    # Prepara o badge com base na escolha
+    badge_color_dict = {
+        'Em Desenvolvimento': 'yellow',
+        'Concluído': 'brightgreen',
+        'Descontinuado': 'red'
+    }
+
+    badge_color = badge_color_dict.get(status, 'yellow')
+
+    status_badge = f"![Status](https://img.shields.io/badge/STATUS-{status.replace(' ', '%20').upper()}-{badge_color}?style=for-the-badge)"
+
+    exclude_files = [os.path.basename(__file__)]
+    languages = detect_languages(DIRECTORY, exclude_files)
+    language_badges = generate_language_badges(languages)
+
+    introduction = f"""Este projeto tem como objetivo **{objetivo}**.
+        objetivo = input("Insira o objetivo do projeto: ").strip()
+        funcionalidade = input("Insira uma descrição breve da funcionalidade: ").strip()
+        """
+
+    introduction = f"""Este projeto tem como objetivo **{objetivo}**.
+    Ele foi desenvolvido para **{funcionalidade}**."""
+
     all_functions = []
     all_classes = []
     all_routes = []
     is_flask_app = False
 
-    # Exclui o próprio script da documentação
-    exclude_files = [os.path.basename(__file__)]
-
-    # Encontra o arquivo de entrada da aplicação Flask, se existir
     app_file, app_port = find_app_entry(DIRECTORY, exclude_files)
 
-    # Itera sobre os arquivos Python para extrair funções, classes e rotas
     for root, dirs, files in os.walk(DIRECTORY):
         for name in files:
             if name.endswith('.py') and name not in exclude_files:
@@ -264,20 +349,16 @@ Ele foi desenvolvido para **{funcionalidade}**."""
                 if is_flask:
                     is_flask_app = True
 
-    # Gera a estrutura do código
     code_structure = generate_code_structure(DIRECTORY, exclude_files)
-    # Gera a documentação das funções
     functions_doc = generate_functions_doc(all_functions)
-    # Gera a documentação das classes
     classes_doc = generate_classes_doc(all_classes)
 
-    # Verifica se a aplicação utiliza Flask e adiciona a documentação das rotas, se aplicável
     if is_flask_app and all_routes:
         routes_doc = generate_routes_doc(all_routes)
         toc_routes = '\n* [Rotas da Aplicação](#rotas-da-aplicação)'
-        routes_section = f"\n## Rotas da Aplicação\n\nAs rotas da aplicação Flask são definidas para interagir com as diversas funcionalidades do projeto.\n\n{routes_doc}"
+        routes_section = f"\n# Rotas da Aplicação\n\nAs rotas da aplicação Flask são definidas para interagir com as diversas funcionalidades do projeto.\n\n{routes_doc}"
         if app_file:
-            execution_section = f"Para executar a aplicação Flask, utilize o seguinte comando:\n\n> python {app_file}\n\n"
+            execution_section = f"Para executar a aplicação Flask, utilize o seguinte comando:\n\n```bash\npython {app_file}\n```\n"
             if app_port:
                 execution_section += f"A aplicação será executada por padrão em `http://0.0.0.0:{app_port}`."
             else:
@@ -288,12 +369,13 @@ Ele foi desenvolvido para **{funcionalidade}**."""
         toc_routes = ''
         routes_section = ''
         if app_file:
-            execution_section = f"Para executar a aplicação, utilize o seguinte comando:\n\n> python {app_file}\n\n"
+            execution_section = f"Para executar a aplicação, utilize o seguinte comando:\n\n```bash\npython {app_file}\n```\n"
         else:
             execution_section = "Para executar a aplicação, utilize o comando apropriado, especificando o arquivo principal."
 
-    # Preenche o template do README.md com as informações coletadas
     readme_content = README_TEMPLATE.format(
+        status_badge=status_badge,
+        language_badges=language_badges,
         introduction=introduction,
         code_structure=code_structure,
         functions_doc=functions_doc,
@@ -303,11 +385,11 @@ Ele foi desenvolvido para **{funcionalidade}**."""
         execution_section=execution_section
     )
 
-    # Escreve o conteúdo no arquivo README.md
     with open('README.md', 'w', encoding='utf-8') as readme_file:
         readme_file.write(readme_content)
 
     print("README.md gerado com sucesso!")
+
 
 if __name__ == '__main__':
     main()
