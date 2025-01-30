@@ -287,6 +287,18 @@ def main():
     Função principal que orquestra a geração do README.md.
     """
     print("Bem-vindo ao Gerador de README.md!")
+    
+    # Pergunta o idioma do README
+    print("\nSelecione o idioma do README:")
+    print("1 - Português")
+    print("2 - English")
+    language_choice = input("Escolha uma opção (1, 2): ").strip()
+    
+    if language_choice == '2':
+        language = 'en'
+    else:
+        language = 'pt'
+
     # Pergunta o status do projeto
     print("\nSelecione o status do projeto:")
     print("1 - Em desenvolvimento")
@@ -297,22 +309,29 @@ def main():
     funcionalidade = input("Insira uma descrição breve da funcionalidade: ").strip()
 
     # Formata a introdução com as entradas do usuário
-    introduction = f"""Este projeto tem como objetivo **{objetivo}**.
+    if language == 'en':
+        introduction = f"""This project aims to **{objetivo}**.
+It was developed to **{funcionalidade}**."""
+    else:
+        introduction = f"""Este projeto tem como objetivo **{objetivo}**.
 Ele foi desenvolvido para **{funcionalidade}**."""
 
     status_dict = {
-        '1': 'Em Desenvolvimento',
-        '2': 'Concluído',
-        '3': 'Descontinuado'
+        '1': 'Em Desenvolvimento' if language == 'pt' else 'In Development',
+        '2': 'Concluído' if language == 'pt' else 'Completed',
+        '3': 'Descontinuado' if language == 'pt' else 'Discontinued'
     }
 
-    status = status_dict.get(status_choice, 'Em Desenvolvimento')
+    status = status_dict.get(status_choice, 'Em Desenvolvimento' if language == 'pt' else 'In Development')
 
     # Prepara o badge com base na escolha
     badge_color_dict = {
         'Em Desenvolvimento': 'yellow',
+        'In Development': 'yellow',
         'Concluído': 'brightgreen',
-        'Descontinuado': 'red'
+        'Completed': 'brightgreen',
+        'Descontinuado': 'red',
+        'Discontinued': 'red'
     }
 
     badge_color = badge_color_dict.get(status, 'yellow')
@@ -322,14 +341,6 @@ Ele foi desenvolvido para **{funcionalidade}**."""
     exclude_files = [os.path.basename(__file__)]
     languages = detect_languages(DIRECTORY, exclude_files)
     language_badges = generate_language_badges(languages)
-
-    introduction = f"""Este projeto tem como objetivo **{objetivo}**.
-        objetivo = input("Insira o objetivo do projeto: ").strip()
-        funcionalidade = input("Insira uma descrição breve da funcionalidade: ").strip()
-        """
-
-    introduction = f"""Este projeto tem como objetivo **{objetivo}**.
-    Ele foi desenvolvido para **{funcionalidade}**."""
 
     all_functions = []
     all_classes = []
@@ -355,23 +366,23 @@ Ele foi desenvolvido para **{funcionalidade}**."""
 
     if is_flask_app and all_routes:
         routes_doc = generate_routes_doc(all_routes)
-        toc_routes = '\n* [Rotas da Aplicação](#rotas-da-aplicação)'
-        routes_section = f"\n# Rotas da Aplicação\n\nAs rotas da aplicação Flask são definidas para interagir com as diversas funcionalidades do projeto.\n\n{routes_doc}"
+        toc_routes = '\n* [Rotas da Aplicação](#rotas-da-aplicação)' if language == 'pt' else '\n* [Application Routes](#application-routes)'
+        routes_section = f"\n# Rotas da Aplicação\n\nAs rotas da aplicação Flask são definidas para interagir com as diversas funcionalidades do projeto.\n\n{routes_doc}" if language == 'pt' else f"\n# Application Routes\n\nThe Flask application routes are defined to interact with the various functionalities of the project.\n\n{routes_doc}"
         if app_file:
-            execution_section = f"Para executar a aplicação Flask, utilize o seguinte comando:\n\n```bash\npython {app_file}\n```\n"
+            execution_section = f"Para executar a aplicação Flask, utilize o seguinte comando:\n\n```bash\npython {app_file}\n```\n" if language == 'pt' else f"To run the Flask application, use the following command:\n\n```bash\npython {app_file}\n```\n"
             if app_port:
-                execution_section += f"A aplicação será executada por padrão em `http://0.0.0.0:{app_port}`."
+                execution_section += f"A aplicação será executada por padrão em `http://0.0.0.0:{app_port}`." if language == 'pt' else f"The application will run by default at `http://0.0.0.0:{app_port}`."
             else:
-                execution_section += "A aplicação será executada por padrão em `http://0.0.0.0:5000`."
+                execution_section += "A aplicação será executada por padrão em `http://0.0.0.0:5000`." if language == 'pt' else "The application will run by default at `http://0.0.0.0:5000`."
         else:
-            execution_section = "Para executar a aplicação Flask, utilize o comando apropriado, especificando o arquivo principal."
+            execution_section = "Para executar a aplicação Flask, utilize o comando apropriado, especificando o arquivo principal." if language == 'pt' else "To run the Flask application, use the appropriate command, specifying the main file."
     else:
         toc_routes = ''
         routes_section = ''
         if app_file:
-            execution_section = f"Para executar a aplicação, utilize o seguinte comando:\n\n```bash\npython {app_file}\n```\n"
+            execution_section = f"Para executar a aplicação, utilize o seguinte comando:\n\n```bash\npython {app_file}\n```\n" if language == 'pt' else f"To run the application, use the following command:\n\n```bash\npython {app_file}\n```\n"
         else:
-            execution_section = "Para executar a aplicação, utilize o comando apropriado, especificando o arquivo principal."
+            execution_section = "Para executar a aplicação, utilize o comando apropriado, especificando o arquivo principal." if language == 'pt' else "To run the application, use the appropriate command, specifying the main file."
 
     readme_content = README_TEMPLATE.format(
         status_badge=status_badge,
@@ -388,7 +399,7 @@ Ele foi desenvolvido para **{funcionalidade}**."""
     with open('README.md', 'w', encoding='utf-8') as readme_file:
         readme_file.write(readme_content)
 
-    print("README.md gerado com sucesso!")
+    print("README.md gerado com sucesso!" if language == 'pt' else "README.md generated successfully!")
 
 
 if __name__ == '__main__':
